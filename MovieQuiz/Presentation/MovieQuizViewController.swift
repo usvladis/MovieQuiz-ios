@@ -33,10 +33,11 @@ final class MovieQuizViewController: UIViewController {
     private var correctAnswers = 0
     
     
-    @IBOutlet weak var imageView: UIImageView!
-    @IBOutlet weak var textLabel: UILabel!
-    @IBOutlet weak var counterLabel: UILabel!
-    
+    @IBOutlet private weak var imageView: UIImageView!
+    @IBOutlet private weak var textLabel: UILabel!
+    @IBOutlet private weak var counterLabel: UILabel!
+    @IBOutlet private weak var noButton: UIButton!
+    @IBOutlet private weak var yesButton: UIButton!
     override func viewDidLoad() {
         super.viewDidLoad()
         //При запуске приложения уже отображается первый вопрос
@@ -47,16 +48,18 @@ final class MovieQuizViewController: UIViewController {
         
     }
     //Реализуем кнопку Нет
-    @IBAction private func NoButtonClicked(_ sender: UIButton) {
+    @IBAction private func noButtonClicked(_ sender: UIButton) {
         let checkAnswer = false
         let currentQuestion = questions[currentQuestionIndex]
         showAnswerResult(isCorrect: checkAnswer == currentQuestion.correctAnswer)
+        buttonBlock()
     }
     //Реализуем кнопку Да
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         let checkAnswer = true
         let currentQuestion = questions[currentQuestionIndex]
         showAnswerResult(isCorrect: checkAnswer == currentQuestion.correctAnswer)
+        buttonBlock()
     }
     
     private func show(quiz step: QuizStepViewModel) {
@@ -122,6 +125,15 @@ final class MovieQuizViewController: UIViewController {
         let firstQuestion = questions[currentQuestionIndex]
         let firstQuestionStep = convert(model: firstQuestion)
         show(quiz: firstQuestionStep)
+    }
+    
+    private func buttonBlock() { //Функция для блокировки кнопок после нажатия
+        noButton.isEnabled = false
+        yesButton.isEnabled = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.noButton.isEnabled = true
+            self.yesButton.isEnabled = true
+        }
     }
 }
     
