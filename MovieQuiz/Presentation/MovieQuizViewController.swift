@@ -9,7 +9,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private var currentQuestion: QuizQuestion?
     private var alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticService?
-
+    
     
     
     @IBOutlet private weak var imageView: UIImageView!
@@ -30,8 +30,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         
         //При запуске приложения уже отображается первый вопрос
         questionFactory?.requestNextQuestion()
-        }
-        
+    }
+    
     // MARK: - QuestionFactoryDelegate
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { return}
@@ -41,16 +41,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             self?.show(quiz: viewModel)
         }
     }
-//    func didReceiveNextQuestion(question: QuizQuestion?) {
-//        guard let question = question else { return}
-//        currentQuestion = question
-//        let viewModel = convert(model: question)
-//        DispatchQueue.main.async { [weak self] in
-//            self?.show(quiz: viewModel)
-//        }
-//    }
     // MARK: - AlertPresenterDelegate
-
+    
     func show(alert: UIAlertController) {
         present(alert, animated: true)
     }
@@ -74,7 +66,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     private func show(quiz step: QuizStepViewModel) {
         //Скрываем рамку с ответом в начале нового вопроса
         imageView.layer.borderWidth = 0.0
-
+        
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
@@ -101,7 +93,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         // Через 1 секунду показываем новый вопрос
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-           self.showNextQuestionOrResult()
+            self.showNextQuestionOrResult()
         }
     }
     
