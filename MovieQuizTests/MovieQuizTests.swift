@@ -6,45 +6,49 @@
 //
 
 import XCTest
+@testable import MovieQuiz
 
-struct ArithmeticOperations {
-    func addition(num1: Int, num2: Int, handler: @escaping(Int) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            handler(num1 + num2)
-        }
+final class MovieQuizViewControllerMock: MovieQuizViewControllerProtocol {
+    func buttonBlock() {
+        
     }
     
-    func subtraction(num1: Int, num2: Int, handler: @escaping(Int) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            handler(num1 - num2)
-        }
+    func show(quiz step: QuizStepViewModel) {
+    
     }
     
-    func multiplication(num1: Int, num2: Int, handler: @escaping(Int) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            handler(num1 * num2)
-        }
+    func show(quiz result: QuizResultsViewModel) {
+    
+    }
+    
+    func highlightImageBorder(isCorrectAnswer: Bool) {
+    
+    }
+    
+    func showLoadingIndicator() {
+    
+    }
+    
+    func hideLoadingIndicator() {
+    
+    }
+    
+    func showNetworkError(message: String) {
+    
     }
 }
 
-final class MovieQuizTests: XCTestCase {
-    
-    func testAddition() throws {
+final class MovieQuizPresenterTests: XCTestCase {
+    func testPresenterConvertModel() throws {
+        let viewControllerMock = MovieQuizViewControllerMock()
+        let sut = MovieQuizPresenter(viewController: viewControllerMock)
         
-        //Given
-        let num1 = 2
-        let num2 = 2
-        let arithmeticOperations = ArithmeticOperations()
+        let emptyData = Data()
+        let question = QuizQuestion(image: emptyData, text: "Question Text", correctAnswer: true)
+        let viewModel = sut.convert(model: question)
         
-        //When
-        let expectation = expectation(description: "Addition function expectation")
-        arithmeticOperations.addition(num1: num1, num2: num2) {result in
-            
-            //Then
-            XCTAssertEqual(result, 4)
-            expectation.fulfill()
-        }
-        waitForExpectations(timeout: 2)
+         XCTAssertNotNil(viewModel.image)
+        XCTAssertEqual(viewModel.question, "Question Text")
+        XCTAssertEqual(viewModel.questionNumber, "1 / 10")
     }
-
 }
