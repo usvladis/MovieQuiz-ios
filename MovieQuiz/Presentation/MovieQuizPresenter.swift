@@ -13,6 +13,13 @@ final class MovieQuizPresenter {
     let questionsAmount = 10
     var currentQuestion: QuizQuestion?
     weak var viewController: MovieQuizViewController?
+    private var statisticService: StatisticService?
+    private var alertPresenter: AlertPresenterProtocol?
+    var questionFactory: QuestionFactoryProtocol?
+    var correctAnswers: Int = 0
+
+
+
 
     
     func isLastQuestions() -> Bool {
@@ -34,17 +41,42 @@ final class MovieQuizPresenter {
     }
     
     func yesButtonClicked() {
-        let checkAnswer = true
+        didAnswer(isYes: true)
+    }
+    
+    func noButtonClicked() {
+        didAnswer(isYes: false)
+    }
+    
+    private func didAnswer(isYes: Bool) {
+        let checkAnswer = isYes
         guard let currentQuestion = currentQuestion else {return}
         viewController?.showAnswerResult(isCorrect: checkAnswer == currentQuestion.correctAnswer)
         viewController?.buttonBlock()
     }
     
-    func noButtonClicked() {
-        let checkAnswer = false
-        guard let currentQuestion = currentQuestion else {return}
-        viewController?.showAnswerResult(isCorrect: checkAnswer == currentQuestion.correctAnswer)
-        viewController?.buttonBlock()
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else { return}
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+            self?.viewController?.show(quiz: viewModel)
+        }
+    }
+    
+    func showNextQuestionOrResult() {
+        if self.isLastQuestions() {
+            let text = "Вы ответили на \(correctAnswers) из 10, попробуйте еще раз!"
+
+            let viewModel = QuizResultsViewModel(
+                title: "Игра закончена!",
+                text: text,
+                buttonText: "Сыграть еще раз")
+            viewController?.show(quiz: viewModel)//Выводим алерт в случае если вопросы закончились
+        }else{
+            self.switchToNextQuestion()
+            questionFactory?.requestNextQuestion()
+        }
     }
     
     
