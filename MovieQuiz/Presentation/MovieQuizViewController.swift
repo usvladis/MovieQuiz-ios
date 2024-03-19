@@ -2,13 +2,14 @@ import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
     
-    private var currentQuestionIndex = 0
+//    private var currentQuestionIndex = 0
     private var correctAnswers = 0
-    private let questionsAmount: Int = 10
+//    private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var alertPresenter: AlertPresenterProtocol?
     private var statisticService: StatisticService?
+    private let presenter = MovieQuizPresenter()
     
     
     
@@ -25,6 +26,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         statisticService = StatisticServiceImplementation()
         alertPresenter = AlertPresenter()
         alertPresenter?.delegate = self
+        presenter.viewController = self
         
         //При запуске приложения уже отображается первый вопрос
         showLoadingIndicator()
@@ -35,7 +37,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { return}
         currentQuestion = question
-        let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
@@ -58,17 +60,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     // MARK: - Actions
     //Реализуем кнопку Нет
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        let checkAnswer = false
-        guard let currentQuestion = currentQuestion else {return}
-        showAnswerResult(isCorrect: checkAnswer == currentQuestion.correctAnswer)
-        buttonBlock()
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked()
     }
     //Реализуем кнопку Да
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        let checkAnswer = true
-        guard let currentQuestion = currentQuestion else {return}
-        showAnswerResult(isCorrect: checkAnswer == currentQuestion.correctAnswer)
-        buttonBlock()
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked()
     }
     // MARK: - Private functions
     private func show(quiz step: QuizStepViewModel) {
@@ -80,14 +78,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         counterLabel.text = step.questionNumber
     }
     
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1) / \(questionsAmount)")
-    }
+//    private func convert(model: QuizQuestion) -> QuizStepViewModel {
+//        QuizStepViewModel(
+//            image: UIImage(data: model.image) ?? UIImage(),
+//            question: model.text,
+//            questionNumber: "\(currentQuestionIndex + 1) / \(questionsAmount)")
+//    }
     
-    private func showAnswerResult(isCorrect: Bool) { //Показываем результат, красим рамку
+    func showAnswerResult(isCorrect: Bool) { //Показываем результат, красим рамку
         if isCorrect {
             imageView.layer.masksToBounds = true
             imageView.layer.borderColor = UIColor.ypGreen.cgColor
@@ -106,28 +104,28 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     }
     
     private func showNextQuestionOrResult() {
-        if currentQuestionIndex == questionsAmount - 1{
-            statisticService?.store(correct: correctAnswers, total: questionsAmount)
+        if presenter.isLastQuestions() {
+            statisticService?.store(correct: correctAnswers, total: presenter.questionsAmount)
             let totalGames = statisticService?.totalGames ?? 0
             let record = statisticService?.bestGame ?? GameRecord(correct: 0, total: 0, date: Date())
             let accuracy = statisticService!.totalAccuracy
-            alertPresenter?.showAlert(model: AlertModel(title: "Игра закончена!", message: "Ваш результат: \(correctAnswers)/\(questionsAmount) \n Количество сыгранных квизов: \(totalGames) \n Рекорд: \(record.correct)/\(record.total) (\(record.date.dateTimeString)) \n Средняя точность: \(String(format: "%.2f", accuracy))%", buttonText: "Сыграть еще раз", completion: { [weak self]  in
+            alertPresenter?.showAlert(model: AlertModel(title: "Игра закончена!", message: "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount) \n Количество сыгранных квизов: \(totalGames) \n Рекорд: \(record.correct)/\(record.total) (\(record.date.dateTimeString)) \n Средняя точность: \(String(format: "%.2f", accuracy))%", buttonText: "Сыграть еще раз", completion: { [weak self]  in
                 guard let self = self else { return }
                 self.restartQuiz()
             }))//Выводим алерт в случае если вопросы закончились
         }else{
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             self.questionFactory?.requestNextQuestion()
         }
     }
     
     private func restartQuiz() { //Функция для рестарта приложения
-        currentQuestionIndex = 0
+        presenter.resetQuestionIndex()
         correctAnswers = 0
         questionFactory?.requestNextQuestion()
     }
     
-    private func buttonBlock() { //Функция для блокировки кнопок после нажатия
+    func buttonBlock() { //Функция для блокировки кнопок после нажатия
         noButton.isEnabled = false
         yesButton.isEnabled = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
